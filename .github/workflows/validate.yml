@@ -1,0 +1,79 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      zap:
+        description: Also run the OWASP ZAP baseline scan
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: static gates
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # the secrets gate scans history, not just the tip
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install tooling
+        run: make tools
+      - name: Static gates
+        run: make validate
+      - name: Unit tests
+        run: make test
+      - name: Compile Bicep
+        run: make bicep
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-reports
+          path: out/
+          if-no-files-found: ignore
+
+  runtime:
+    name: runtime gates
+    needs: static
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install tooling
+        run: SKIP_BINARIES=1 make tools
+      - name: Start the validation stack
+        run: make up
+      - name: Smoke and OWASP gates
+        run: make runtime
+      - name: ZAP baseline
+        if: github.event_name == 'workflow_dispatch' && inputs.zap
+        run: make zap
+      - name: Collect evidence
+        if: always()
+        run: make collect
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-evidence
+          path: out/
+          if-no-files-found: ignore
+      - name: Stop the stack
+        if: always()
+        run: make down
