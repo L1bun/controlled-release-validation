@@ -1,0 +1,26 @@
+---
+# Deliberately broken manifest used by tests/test_release_manifest.py.
+# The credentials below are fake.
+
+release:
+  id: "2026.11.1"
+  service: notes-api
+  owner: ""
+
+image:
+  repository: crv/notes-api
+  tag: latest
+
+runtime:
+  env:
+    APP_ENV: qa
+    RELEASE_VERSION: "1.8.3"
+    DB_PASSWORD: hunter2-not-a-real-password
+    DATABASE_URL: postgres://notes:s3cr3t-example@db.internal:5432/notes
+  secrets:
+    - name: SESSION_SIGNING_KEY
+  probes:
+    liveness: /healthz
+
+rollback:
+  previous_tag: latest

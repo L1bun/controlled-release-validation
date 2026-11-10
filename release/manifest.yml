@@ -1,0 +1,37 @@
+---
+# Release manifest for the candidate under validation.
+# Checked by `make validate` (checks/release_manifest.py) and compared against
+# the running stack by the smoke gate.
+
+release:
+  id: "2026.11.1"
+  service: notes-api
+  owner: platform-release
+  change_ref: CHG-1042
+
+image:
+  repository: crv/notes-api
+  tag: "1.8.3"
+  # placeholder for the sample service; the build pipeline records the real digest
+  digest: sha256:4f0c1c6c8a0d2b9e7d5a3f1e6b8c9d0a1b2c3d4e5f60718293a4b5c6d7e8f901
+
+runtime:
+  replicas: 2
+  env:
+    APP_ENV: validation
+    RELEASE_VERSION: "1.8.3"
+    LOG_LEVEL: INFO
+  # values are resolved from the secret store at deploy time, never written here
+  secrets:
+    - name: SESSION_SIGNING_KEY
+      ref: keyvault://kv-crv-validation/notes-api-session-signing-key
+  resources:
+    cpu: 500m
+    memory: 256Mi
+  probes:
+    liveness: /healthz
+    readiness: /readyz
+
+rollback:
+  previous_tag: "1.8.2"
+  verified: true
