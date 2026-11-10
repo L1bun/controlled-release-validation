@@ -1,0 +1,45 @@
+#cloud-config
+# First-boot setup for the validation host. __ADMIN_USER__ is replaced by
+# host.bicep before the file is handed to the VM.
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - ca-certificates
+  - curl
+  - docker.io
+  - docker-buildx
+  - docker-compose-v2
+  - git
+  - jq
+  - make
+  - python3-pip
+  - python3-venv
+  - unattended-upgrades
+
+write_files:
+  - path: /etc/docker/daemon.json
+    permissions: "0644"
+    content: |
+      {
+        "log-driver": "json-file",
+        "log-opts": { "max-size": "10m", "max-file": "3" },
+        "live-restore": true,
+        "no-new-privileges": true
+      }
+  - path: /etc/motd
+    permissions: "0644"
+    content: |
+      Controlled release validation host.
+      Working copy: /srv/crv    Evidence: /srv/crv-evidence
+      Nothing on this host is production. Tear it down when you are done.
+
+runcmd:
+  - systemctl enable --now docker
+  - usermod -aG docker __ADMIN_USER__
+  # validators (no sudo) can read evidence, only operators can write it
+  - mkdir -p /srv/crv /srv/crv-evidence
+  - chown __ADMIN_USER__:docker /srv/crv /srv/crv-evidence
+  - chmod 2775 /srv/crv
+  - chmod 2755 /srv/crv-evidence
