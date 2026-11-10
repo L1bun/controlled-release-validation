@@ -1,0 +1,9 @@
+# Tooling for the gates and the tests. The service's own dependencies are in
+# repro/app/requirements.txt.
+-r repro/app/requirements.txt
+pip-audit==2.10.1
+pytest==9.1.1
+PyYAML==6.0.3
+requests==2.34.2
+shellcheck-py==0.11.0.1
+yamllint==1.38.0

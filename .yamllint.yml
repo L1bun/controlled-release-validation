@@ -1,0 +1,20 @@
+---
+extends: default
+
+ignore: |
+  .venv/
+  .tools/
+  out/
+
+rules:
+  line-length:
+    max: 120
+  truthy:
+    # "on" is a key in GitHub Actions workflows
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1
+    # cloud-init insists on a first line of exactly "#cloud-config"
+    ignore: |
+      infra/cloud-init.yml
+  document-start: disable

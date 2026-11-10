@@ -1,0 +1,14 @@
+# gitleaks configuration for the secrets gate (checks/secrets_scan.sh).
+title = "controlled-release-validation"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fixtures that contain fake secrets on purpose, and local tool directories"
+paths = [
+  '''^tests/fixtures/''',
+  '''^\.venv/''',
+  '''^\.tools/''',
+  '''^out/''',
+]
