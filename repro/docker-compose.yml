@@ -1,0 +1,78 @@
+name: crv
+
+# Validation stack: the release candidate (app) behind an edge proxy.
+# The app sits on an internal-only network; the proxy is the single way in and
+# is published on loopback only, so nothing here is reachable from outside the
+# host it runs on.
+
+services:
+  app:
+    build:
+      context: ./app
+    image: crv/notes-api:${RELEASE_VERSION:-1.8.3}
+    environment:
+      APP_ENV: validation
+      RELEASE_VERSION: ${RELEASE_VERSION:-1.8.3}
+      LOG_LEVEL: INFO
+    user: "10001"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    volumes:
+      - data:/data
+    networks:
+      - internal
+    mem_limit: 256m
+    cpus: 0.5
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=2)"
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
+
+  proxy:
+    image: nginxinc/nginx-unprivileged:1.28-alpine
+    depends_on:
+      - app
+    user: "101"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./proxy/upstream.conf:/etc/nginx/crv/upstream.conf:ro
+      - ./proxy/security-headers.conf:/etc/nginx/crv/security-headers.conf:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - internal
+      - edge
+    mem_limit: 128m
+    cpus: 0.25
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
+
+networks:
+  internal:
+    internal: true
+  edge:
+
+volumes:
+  data:

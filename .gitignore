@@ -1,0 +1,15 @@
+# local tooling installed by scripts/bootstrap.sh
+.venv/
+.tools/
+
+# gate reports and repro evidence
+out/
+
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# never commit real parameter files or keys
+*.local.bicepparam
+*.pem
+.env
