@@ -1,0 +1,6 @@
+# Proxy config shipped without its security header block.
+# Expect: stack is healthy and smoke checks pass, but the OWASP gate fails.
+services:
+  proxy:
+    volumes:
+      - ./scenarios/conf/security-headers-none.conf:/etc/nginx/crv/security-headers.conf:ro

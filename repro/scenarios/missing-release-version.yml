@@ -1,0 +1,6 @@
+# RELEASE_VERSION never made it into the environment.
+# Expect: app stays unhealthy, /readyz returns 503 naming the missing setting.
+services:
+  app:
+    environment:
+      RELEASE_VERSION: ""

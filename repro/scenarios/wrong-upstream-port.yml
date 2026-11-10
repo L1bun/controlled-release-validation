@@ -1,0 +1,6 @@
+# Proxy points at a port the app is not listening on.
+# Expect: app is healthy on its own, every request through the proxy is a 502.
+services:
+  proxy:
+    volumes:
+      - ./scenarios/conf/upstream-wrong-port.conf:/etc/nginx/crv/upstream.conf:ro

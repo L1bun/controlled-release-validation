@@ -1,0 +1,8 @@
+# Data volume mounted read-only.
+# Happens when a storage class or mount option is copied from the wrong
+# environment.
+# Expect: /readyz returns 503 with "data directory /data is not writable".
+services:
+  app:
+    volumes:
+      - data:/data:ro
